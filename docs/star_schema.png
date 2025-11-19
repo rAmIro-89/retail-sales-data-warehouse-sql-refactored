@@ -1,0 +1,16 @@
+This is a placeholder file for the star schema diagram.
+Please replace this with an actual PNG image showing the data warehouse star schema design.
+
+The diagram should include:
+- All dimension tables (dim_date, dim_product, dim_customer, dim_store)
+- The fact table (fact_sales)
+- Relationships between tables
+- Primary and foreign key indicators
+- Key attributes for each table
+
+You can create this diagram using tools like:
+- draw.io (https://app.diagrams.net/)
+- Lucidchart
+- Microsoft Visio
+- dbdiagram.io
+- Any database modeling tool

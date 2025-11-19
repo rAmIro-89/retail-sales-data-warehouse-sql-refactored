@@ -1,0 +1,11 @@
+# Placeholder for raw data files
+
+This directory is for storing raw, unprocessed data files from various sources.
+
+Add your CSV, Excel, JSON, or other data files here.
+
+Example files that might go here:
+- sales_data.csv
+- customer_data.xlsx
+- product_catalog.json
+- transaction_log.csv
