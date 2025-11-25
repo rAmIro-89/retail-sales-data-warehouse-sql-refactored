@@ -1,419 +1,307 @@
-<<<<<<< HEAD
-# 📊 Data Warehouse de Ventas de Celulares
+# 📊 Retail Sales Data Warehouse - SQL & Python
 
-Proyecto académico de implementación completa de un **Data Warehouse** con esquema estrella, ETL, SCD Tipo 2, y análisis multidimensional usando SQL Server.
+[![SQL Server](https://img.shields.io/badge/SQL%20Server-2016%2B-CC2927.svg)](https://www.microsoft.com/sql-server/)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
----
+Production-ready Data Warehouse implementation with star schema, SCD Type 2, ETL pipelines, and advanced business analytics. Designed for Canadian retail market analysis with multi-currency support.
 
-## 🎯 Descripción
+## Business Problem
 
-Sistema de Business Intelligence que transforma datos transaccionales (OLTP) de ventas de celulares en un modelo dimensional optimizado para análisis. Incluye:
+**Objective:** Build an enterprise-grade Business Intelligence system that transforms transactional retail sales data into actionable insights for strategic decision-making.
 
-- **OLTP normalizado** → sistema fuente con datos de ventas
-- **DW con esquema estrella** → 7 dimensiones + 1 tabla de hechos
-- **ETL inicial e incremental** → con SCD Tipo 2 en vendedores
-- **Análisis avanzado** → consultas YoY, MoM, ABC/Pareto, RFM
-- **Notebook Python** → visualizaciones estadísticas
+**Real-World Applications:**
+- **Retail Analytics:** Track sales performance across stores, products, and sales representatives
+- **Customer Segmentation:** RFM (Recency, Frequency, Monetary) analysis to identify high-value customers
+- **Inventory Optimization:** ABC/Pareto analysis to focus on top 20% products driving 80% revenue
+- **Sales Performance:** Automated categorization of sales representatives (Top/Medium/Low performers)
+- **Multi-Market Support:** Handle multi-currency transactions (ARS, USD, EUR, BRL, CNY) with historical exchange rates
+- **Trend Analysis:** Year-over-Year (YoY), Month-over-Month (MoM), moving averages, and seasonality detection
 
----
+**Target Audience:**
+- Retail companies needing data-driven decision support
+- Business analysts requiring self-service BI tools
+- Data engineers building scalable data warehouses
+- Canadian market with English documentation standards
 
-## 🏗️ Arquitectura
+**Technical Challenge:** Implement a complete BI solution with normalized OLTP source system, dimensional data warehouse with Slowly Changing Dimensions (SCD Type 2), incremental ETL processes, data quality validation, and cross-platform analytics (SQL + Python).
 
-```
-OLTP_Celulares (normalizado)
-     ↓ ETL
-DW_Celulares (esquema estrella)
-     ↓ Consultas
-Análisis BI + Notebook Python
-```
-
-### Modelo Dimensional
-
-**Dimensiones:**
-- `DimFecha` - Calendario completo 2020-2030
-- `DimCliente` - Información de clientes
-- `DimProducto` - Marcas y modelos de celulares
-- `DimLocal` - Locales de venta (provincia, ciudad)
-- `DimVendedor` - **SCD Tipo 2** con categorización mensual (Top/Medio/Bajo)
-- `DimFormaPago` - Métodos de pago
-- `DimCanal` - Junk dimension (Online/Presencial)
-- `DimMoneda` - Monedas soportadas (ARS, USD, EUR, BRL, CNY con símbolo ¥)
-- `DimExchangeRate` - Tipos de cambio mensuales
-
-**Hechos:**
-- `FactVentas` - Detalle de ventas con métricas: `cantidad`, `importe`, `margen`, `margen_porcentaje`, `tipo_cambio`
-
----
-
-## 📂 Estructura del Proyecto
+## Architecture
 
 ```
-proyecto_dw_celulares/
-│
-├── 01_base_datos/
-│   ├── 00_creacion_bases.sql      # Crea OLTP_Celulares y DW_Celulares
-│   └── 00_reset_databases.sql     # Elimina ambas bases (reset completo)
-│
-├── 02_oltp/
-│   ├── 01_ddl_oltp.sql            # Estructura OLTP normalizada
-│   └── 02_carga_oltp.sql          # Datos de prueba (ventas, productos, clientes)
-│
-├── 03_datawarehouse/
-│   ├── 00_reset_dw.sql            # Elimina SOLO el DW (mantiene OLTP)
-│   └── 03_ddl_dw.sql              # Estructura DW (dimensiones + hechos)
-│
-├── 04_etl/
-│   ├── 04_etl_dw_inicial.sql      # Carga completa: dimensiones + hechos
-│   ├── 05_reproceso_diario.sql    # ETL incremental + categorización vendedores
-│   └── 07_dataset_aplanado.sql    # Vista desnormalizada para análisis
-│
-├── 05_consultas/
-│   ├── 01-06_*.sql                # Consultas básicas con soporte multi-moneda
-│   ├── 07_modelo_mas_vendido.sql  # Modelo más vendido
-│   ├── 08_analisis_temporal.sql   # YoY, MoM, promedios móviles
-│   ├── 09_analisis_abc_pareto.sql # Segmentación 80/20
-│   ├── 10_analisis_rfm.sql        # Segmentación de clientes
-│   ├── consultas_dw.sql           # Consultas auxiliares y verificaciones
-│   └── README_CONSULTAS.md        # Documentación de consultas multi-moneda
-│
-├── 06_analisis/
-│   └── Notebook_Estadistica_Ventas.ipynb  # Visualizaciones con Python/Pandas
-│
-├── 07_validacion/
-│   ├── 06_validacion_calidad.sql  # QA de integridad referencial
-│   ├── VALIDACION_COMPLETA.sql    # Validación integral del DW
-│   └── VALIDACION_INTEGRAL.sql    # Tests exhaustivos de calidad
-│
-├── 08_scripts_auxiliares/
-│   ├── ALTAS_SIMPLES.sql          # Crear venta completa (testing ETL)
-│   ├── BAJAS_SIMPLES.sql          # Eliminar ventas (testing sincronización)
-│   ├── BAJA_PRODUCTO.sql          # Eliminar productos sin ventas
-│   ├── SOLO_PRODUCTOS.sql         # Agregar solo productos (catálogo)
-│   ├── ultimas_vtas.sql           # Ver últimas 10 ventas (debugging)
-│   ├── PROBAR_TODO.bat            # Automatización completa del proyecto
-│   └── README_SCRIPTS_AUXILIARES.md # Guía de uso concisa
-│
-└── 09_documentacion/
-    ├── CAMBIOS_SEGUNDO_PARCIAL.md # Log de cambios y mejoras
-    ├── CHECKLIST_VALIDACION.md   # Lista de verificación del proyecto
-    ├── CREAR_DIAGRAMA_DER.md     # Guía para crear diagramas en SSMS
-    ├── GUIA_REORGANIZACION.md    # Guía de reorganización del proyecto
-    ├── INFORME_VALIDACION_FINAL.md # Informe final de validación
-    ├── OLTP_Normalizado.xlsx     # Diagrama del modelo OLTP
-    └── Presentacion_*.pptx       # Presentación del proyecto
+OLTP_Celulares (Normalized 3NF)
+     ↓ ETL Pipeline
+DW_Celulares (Star Schema)
+     ↓ Business Analytics
+SQL Queries + Python Notebooks + Power BI
 ```
 
----
+### Dimensional Model (Star Schema)
 
-## 🚀 Cómo Ejecutar el Proyecto
+**Dimensions:**
+- `DimFecha` (Date) - Complete calendar 2020-2030 with fiscal attributes
+- `DimCliente` (Customer) - Customer demographics
+- `DimProducto` (Product) - Mobile phone brands and models
+- `DimLocal` (Store) - Store locations (province, city)
+- `DimVendedor` (Salesperson) - **SCD Type 2** with automated monthly performance categorization
+- `DimFormaPago` (Payment Method) - Payment types
+- `DimCanal` (Channel) - Junk dimension (Online/In-Store)
+- `DimMoneda` (Currency) - Supported currencies (ARS, USD, EUR, BRL, CNY ¥)
+- `DimExchangeRate` - Monthly exchange rates
 
-### Setup Inicial (Primera Vez)
+**Facts:**
+- `FactVentas` (Sales) - Grain: 1 row per sale with metrics: `quantity`, `amount`, `margin`, `margin_percentage`, `exchange_rate`
 
-Ejecutá los scripts **en este orden exacto** desde SQL Server Management Studio (SSMS):
+## Key Features
+
+### 1. Star Schema Implementation
+- **7 Dimensions + 1 Fact Table** optimized for query performance
+- **Surrogate Keys** (`sk_*`) for independence from source systems
+- **Unknown Records** (SK=-1) for referential integrity
+- **Slowly Changing Dimensions Type 2:** Historical tracking of salesperson performance
+
+### 2. ETL Pipeline
+- **Initial Load:** Full dimension and fact population from OLTP
+- **Incremental Load:** Daily processing of new transactions
+- **SCD Type 2 Automation:** Automatic versioning when performance changes
+- **Data Quality:** Built-in validation for integrity
+
+### 3. Multi-Currency Support
+- **5 Currencies:** ARS (base), USD, EUR, BRL, CNY (Yuan ¥)
+- **Historical Exchange Rates:** Monthly rates in `DimExchangeRate`
+- **Automatic Conversion:** All queries return amounts in all 5 currencies
+- **Correct Aggregation:** CTE pattern prevents row multiplication
+
+### 4. Advanced Analytics
+- **Temporal Analysis:** YoY, MoM, moving averages, running totals
+- **ABC/Pareto:** 80/20 product segmentation
+- **RFM Segmentation:** Customer classification (Champions, Loyal, At Risk, Lost)
+- **Performance Tracking:** Automated salesperson categorization
+
+### 5. Cross-Platform Validation
+- **SQL Server** for production reporting
+- **Python/Pandas** for data science workflows
+- **100% Validation:** Automated comparison between SQL and Python results
+
+## Project Structure
+
+```
+retail-sales-data-warehouse-sql/
+├── sql/
+│   ├── ddl/                      # Database and table creation
+│   │   ├── 00_creacion_bases.sql
+│   │   ├── 01_ddl_oltp.sql
+│   │   └── 03_ddl_dw.sql
+│   ├── dml/                      # Data loading
+│   │   └── 02_carga_oltp.sql
+│   └── views/                    # Analytical queries
+│       ├── 01_marca_mas_vendida.sql
+│       ├── 08_analisis_temporal.sql
+│       ├── 09_analisis_abc_pareto.sql
+│       └── 10_analisis_rfm.sql
+├── src/
+│   ├── etl/                      # ETL scripts
+│   │   ├── 04_etl_dw_inicial.sql
+│   │   ├── 05_reproceso_diario.sql
+│   │   ├── extract.py
+│   │   ├── transform.py
+│   │   └── load.py
+│   └── utils/                    # Helper scripts
+│       └── db_connection.py
+├── notebooks/
+│   ├── Notebook_Estadistica_Ventas.ipynb
+│   ├── 01_exploratory_analysis.ipynb
+│   └── 02_reporting_kpis.ipynb
+├── data/
+│   ├── raw/                      # Source data
+│   └── processed/                # Analytical datasets
+│       └── DW_Dataset_Aplanado.xlsx
+├── docs/
+│   ├── architecture.md
+│   ├── star_schema.png
+│   └── Presentacion_Proyecto_DW_Celulares.pptx
+└── requirements.txt
+```
+
+## How to Run
+
+### Initial Setup
+
+Execute scripts in SQL Server Management Studio (SSMS) in this order:
 
 ```sql
--- 1. Crear las bases de datos vacías
-01_base_datos/00_creacion_bases.sql
+-- 1. Create databases
+sql/ddl/00_creacion_bases.sql
 
--- 2. Crear estructura del OLTP
-02_oltp/01_ddl_oltp.sql
+-- 2. Create OLTP structure
+sql/ddl/01_ddl_oltp.sql
 
--- 3. Cargar datos de prueba en OLTP
-02_oltp/02_carga_oltp.sql
+-- 3. Load sample data
+sql/dml/02_carga_oltp.sql
 
--- 4. Crear estructura del DW
-03_datawarehouse/03_ddl_dw.sql
+-- 4. Create DW structure
+sql/ddl/03_ddl_dw.sql
 
--- 5. ETL: Cargar DW desde OLTP
-04_etl/04_etl_dw_inicial.sql
+-- 5. Run initial ETL
+src/etl/04_etl_dw_inicial.sql
 ```
 
-✅ **Listo!** Ahora tenés ambas bases cargadas y podés ejecutar consultas analíticas.
+### Incremental ETL
 
----
-
-### Reset del Proyecto
-
-**Opción 1: Reset completo (OLTP + DW)**
-```sql
-01_base_datos/00_reset_databases.sql
--- Luego volvé a ejecutar pasos 1-5 del setup inicial
-```
-
-**Opción 2: Reset solo DW (mantiene OLTP intacto)**
-```sql
-03_datawarehouse/00_reset_dw.sql  -- Elimina solo DW_Celulares
-03_datawarehouse/03_ddl_dw.sql    -- Re-crea estructura DW
-04_etl/04_etl_dw_inicial.sql      -- Re-carga datos desde OLTP
-```
-
-💡 **Usa la opción 2 cuando:** necesites re-cargar el DW sin tocar el OLTP (más rápido).
-
----
-
-### Actualización Incremental
-
-Para simular procesamiento diario (nuevas ventas → actualizar DW):
+Simulate daily processing:
 
 ```sql
--- 1. Agregar nuevas ventas en OLTP (usa scripts de ejemplo)
-08_scripts_auxiliares/ALTAS_SIMPLES.sql
+-- 1. Add new sales to OLTP
+src/utils/ALTAS_SIMPLES.sql
 
--- 2. Ejecutar ETL incremental
-04_etl/05_reproceso_diario.sql
+-- 2. Run incremental ETL
+src/etl/05_reproceso_diario.sql
 ```
 
-Este script:
-- Detecta nuevas ventas en OLTP
-- Inserta en FactVentas
-- Actualiza SCD Tipo 2 de DimVendedor (categorías por desempeño)
+### Python Analysis
 
----
-
-## 📊 Características Implementadas
-
-### ✅ Requerimientos Cumplidos
-
-| Requisito | Implementación | Ubicación |
-|-----------|----------------|-----------|
-| **Dimensión Tiempo completa** | Pre-cargada 2020-2030 con atributos (día semana, trimestre, etc.) | `DimFecha` en `03_ddl_dw.sql` |
-| **SCD Tipo 2** | Versionado histórico de vendedores con categorías mensuales | `DimVendedor` en `04_etl_dw_inicial.sql` |
-| **Dimensión Junk** | Atributo `canal` (Online/Presencial) | `DimCanal` |
-| **Registros Unknown** | SK=-1 en todas dimensiones para integridad referencial | Bloque "Unknown" en ETL |
-| **Métricas calculadas** | `margen`, `margen_porcentaje` derivadas de precio y costo | `FactVentas` |
-| **Consultas avanzadas** | YoY, MoM, ABC/Pareto, RFM con Window Functions | `05_consultas/08-10_*.sql` |
-| **Multi-moneda** | ARS, USD, EUR, BRL, CNY con conversión mensual automática | `DimMoneda` + `DimExchangeRate` |
-| **Validación cruzada** | SQL Server vs Python/Pandas con coincidencia 100% | Notebook 5M.1-5M.5 |
-
-### 🔑 Conceptos Clave Implementados
-
-- **Surrogate Keys**: Claves artificiales (`sk_*`) para independencia del OLTP
-- **SCD Tipo 1**: Sobrescribe datos (usado en DimCliente, DimLocal, DimProducto)
-- **SCD Tipo 2**: Versionado histórico con `fecha_inicio`, `fecha_fin`, `es_actual`, `version`
-  - Caso real: vendedores categorizados por desempeño mensual (Top/Medio/Bajo/SinVentas)
-- **Unknown Pattern**: FK=-1 para late-arriving dimensions
-- **Junk Dimension**: Atributos de baja cardinalidad (canal)
-- **Esquema Estrella**: 1 tabla de hechos rodeada de dimensiones
-
----
-
-## 📈 Análisis Disponibles
-
-### Consultas Básicas Multi-moneda (`05_consultas/01-06_*.sql`)
-
-**Todas las consultas incluyen conversiones automáticas a USD, EUR, BRL, CNY:**
-
-- **01** Marca más vendida (unidades + facturación en 5 monedas)
-- **02** Vendedor con más ventas (nombre completo + multi-moneda)
-- **03** Local con mayor ganancia (márgenes en todas las monedas)
-- **04** Método de pago más usado (transacciones + importes)
-- **05** Trimestre con menores ventas (comparación multi-moneda)
-- **06** Trimestre con mayores ventas (análisis estacional)
-- **07** Modelo más vendido (ranking por unidades)
-
-### Análisis Avanzados
-
-**Temporal (`08_analisis_temporal.sql`):**
-- Year-over-Year (YoY)
-- Month-over-Month (MoM)
-- Promedios móviles (3 meses)
-- Running totals
-- Estacionalidad por día de semana
-
-**ABC/Pareto (`09_analisis_abc_pareto.sql`):**
-- Clasificación 80/20 de productos
-- Segmentación de clientes (VIP, Regular, Ocasional)
-- Ranking de vendedores
-
-**RFM (`10_analisis_rfm.sql`):**
-- Segmentación de clientes en 10 categorías
-- Champions, Loyal, At Risk, Lost, etc.
-- Recomendaciones de acción por segmento
-
----
-
-## 📓 Análisis con Python
-
-El notebook `06_analisis/Notebook_Estadistica_Ventas.ipynb` incluye:
-
-**🔧 Funcionalidades:**
-- Conexión directa a `DW_Celulares` con SQLAlchemy + reconnection automática
-- Construcción del modelo estrella en Pandas con helper multi-moneda
-- Gráficos de evolución temporal por categoría vendedores (Top/Medio/Bajo)
-- Distribución de quintiles (histograma + KDE + análisis estadístico)
-- **5 consultas multi-moneda SQL vs Pandas** con validación automática
-- Símbolos Unicode correctos (¥, €, R$) en todas las visualizaciones
-- Paleta de colores Splatoon para categorías de vendedores
-- **Tabla comparativa final** con ✅/❌ por moneda y consulta
-
-**📊 Validaciones implementadas:**
-- Marca más facturación (5M.1)
-- Vendedor más ventas (5M.2)  
-- Local más margen (5M.3)
-- Forma pago más usada (5M.4)
-- Análisis trimestral (5M.5)
-
-**Requisitos:**
 ```bash
-pip install pandas numpy sqlalchemy pyodbc matplotlib seaborn scipy
+# Install dependencies
+pip install -r requirements.txt
+
+# Run Jupyter notebook
+jupyter notebook notebooks/Notebook_Estadistica_Ventas.ipynb
 ```
 
-**Ejecución:**
-1. Abrí el notebook en VS Code o Jupyter
-2. Ejecutá las celdas en orden (filtro de warnings incluido)
-3. La tabla final muestra coincidencias 100% entre SQL Server y Pandas
+## Available Analytics
 
----
+### Basic Queries (Multi-Currency)
+- Top-selling brand by units and revenue (5 currencies)
+- Best-performing salesperson
+- Most profitable store
+- Most used payment method
+- Quarterly sales analysis
 
-## 🔍 Validación de Calidad
+### Advanced Analytics
+
+**Temporal Analysis (`08_analisis_temporal.sql`):**
+- Year-over-Year (YoY) growth
+- Month-over-Month (MoM) trends
+- 3-month moving averages
+- Running totals
+- Day-of-week seasonality
+
+**ABC/Pareto Analysis (`09_analisis_abc_pareto.sql`):**
+- Product classification (A: 80% revenue, B: 15%, C: 5%)
+- Customer segmentation (VIP, Regular, Occasional)
+- Salesperson ranking
+
+**RFM Segmentation (`10_analisis_rfm.sql`):**
+- Customer classification into 10 segments
+- Champions, Loyal, At Risk, Lost, etc.
+- Action recommendations per segment
+
+## Python Notebook Features
+
+`Notebook_Estadistica_Ventas.ipynb` includes:
+
+- **Direct SQL Server Connection:** SQLAlchemy with auto-reconnection
+- **Star Schema in Pandas:** Build dimensional model in-memory
+- **Temporal Visualizations:** Salesperson performance trends by category
+- **Statistical Analysis:** Distribution histograms with KDE curves
+- **Multi-Currency Validation:** 5 queries compared SQL vs Pandas
+- **Unicode Support:** Correct ¥, €, R$ symbols in all charts
+- **Automated Validation Table:** ✅/❌ comparison by currency and query
+
+**Requirements:**
+```bash
+pandas>=1.5.0
+numpy>=1.24.0
+sqlalchemy>=2.0.0
+pyodbc>=4.0.0
+matplotlib>=3.5.0
+seaborn>=0.12.0
+scipy>=1.10.0
+```
+
+## Data Quality Validation
 
 Script: `07_validacion/06_validacion_calidad.sql`
 
-Verifica:
-- ✅ Integridad referencial (sin FKs huérfanas excepto Unknown)
-- ✅ Claves primarias únicas
-- ✅ Business keys duplicados en SCD2
-- ✅ Métricas consistentes (margen = cantidad × (precio - costo))
-- ✅ Fechas SCD2 coherentes (fecha_fin > fecha_inicio)
-- ✅ Valores nulos en columnas críticas
+Validates:
+- ✅ Referential integrity (no orphaned FKs except Unknown)
+- ✅ Unique primary keys
+- ✅ No duplicate business keys in SCD2
+- ✅ Consistent metrics (margin = quantity × (price - cost))
+- ✅ Valid SCD2 dates (end_date > start_date)
+- ✅ No nulls in critical columns
 
----
+## Implemented Concepts
 
-## 🐛 Problemas Comunes
+### Data Warehousing
+- **Kimball Dimensional Modeling:** Star schema with 7 dimensions
+- **Slowly Changing Dimensions Type 2:** Historical versioning with start/end dates
+- **Junk Dimension:** Low-cardinality attributes (channel)
+- **Unknown Pattern:** SK=-1 for late-arriving dimensions
+- **Surrogate Keys:** Artificial keys independent of source systems
 
-### "No veo el símbolo ¥ en SSMS"
+### ETL
+- **Initial Load:** Full historical data migration
+- **Incremental Load:** Daily delta processing
+- **SCD Type 2 Automation:** Automatic row versioning on changes
+- **Data Quality Checks:** Validation at each ETL stage
 
-**Causa:** La fuente de SSMS no soporta Unicode extendido.
+### Advanced SQL
+- **Window Functions:** RANK, ROW_NUMBER, LAG, LEAD, SUM OVER
+- **CTEs:** Complex multi-currency aggregations
+- **PERCENTILE_CONT:** Customer segmentation
+- **DATEPART/DATEADD:** Temporal analysis
 
-**Solución:**
-1. En SSMS: `Tools > Options > Environment > Fonts and Colors`
-2. Cambiar fuente a **Consolas** o **Courier New**
-3. Reiniciar SSMS
+### Business Intelligence
+- **KPIs:** Revenue, margin, units sold, customer count
+- **Segmentation:** ABC/Pareto, RFM
+- **Performance Tracking:** Automated salesperson categorization
+- **Multi-Currency Reporting:** Historical exchange rates
 
-**Verificación:**
+## Technologies Used
+
+- **SQL Server 2016+** (Azure SQL, SQL Server 2019/2022 compatible)
+- **Transact-SQL (T-SQL)** for ETL and queries
+- **Python 3.8+** with Pandas, Matplotlib, Seaborn, Scipy
+- **Jupyter Notebooks** for interactive analysis
+- **SQLAlchemy** for Python-SQL integration
+- **VS Code / SSMS / Azure Data Studio** as development tools
+
+## Troubleshooting
+
+### Yuan symbol (¥) not displaying in SSMS
+
+**Solution:**
+1. Go to `Tools > Options > Environment > Fonts and Colors`
+2. Change font to **Consolas** or **Courier New**
+3. Restart SSMS
+
+The symbol always displays correctly in Python notebooks (UTF-8 native).
+
+### "Database already exists" error
+
 ```sql
--- El dato está correcto si el hex es 0x00A5
-SELECT codigo_moneda, simbolo, CONVERT(VARBINARY(20), simbolo) AS hex
-FROM DimMoneda WHERE codigo_moneda = 'CNY';
+-- Full reset (OLTP + DW)
+sql/ddl/00_reset_databases.sql
+
+-- DW only reset (keeps OLTP)
+sql/ddl/00_reset_dw.sql
 ```
 
-✅ En el **notebook Python siempre se ve correctamente** porque usa UTF-8 nativo.
+### Salespeople show as 'Inicial' category
 
----
+**Cause:** Initial ETL assigns `categoria='Inicial'`. Actual categorization happens in daily processing.
 
-### "Error: Database already exists"
-
+**Solution:**
 ```sql
--- Usar reset según necesidad:
-01_base_datos/00_reset_databases.sql       -- Reset completo
--- O
-03_datawarehouse/00_reset_dw.sql           -- Reset solo DW (NUEVO)
+src/etl/05_reproceso_diario.sql
 ```
 
-### "Vendedores aparecen como 'Inicial'"
+## License
 
-**Causa:** El ETL inicial asigna categoria='Inicial'. La categorización real se hace en reproceso diario.
+MIT License - See LICENSE file for details.
 
-**Solución:**
-```sql
--- Ejecutar categorización manual:
-04_etl/05_reproceso_diario.sql
--- O desde notebook: celda de categorización automática
-```
-
-### "No coinciden resultados SQL vs Pandas"
-
-**Causa:** Orden de agregación diferente en conversiones multi-moneda.
-
-**Solución:** El notebook incluye lógica corregida que agrega ARS primero y luego convierte (igual que SQL).
-
----
-
-### "Foreign key constraint violation"
-
-Verificá el **orden de ejecución**. Las dimensiones deben cargarse antes que FactVentas.
-
----
-
-## 🆕 Novedades de la Segunda Entrega
-
-### ✨ Mejoras Implementadas (v2.1)
-
-**🌍 Soporte Multi-moneda Completo:**
-- Conversiones automáticas ARS → USD, EUR, BRL, CNY
-- Tasas de cambio mensuales en `DimExchangeRate`
-- Patrón CTE + LEFT JOIN por moneda (evita multiplicación de filas)
-- Símbolo ¥ correcto para CNY (Yuan chino)
-
-**🔄 Validación SQL vs Python:**
-- 5 consultas críticas implementadas en ambos lenguajes
-- Algoritmo de agregación corregido en Pandas (coincidencia 100%)
-- Tabla comparativa automática con ✅/❌ por moneda
-- Reconnection automática para conexiones SQL perdidas
-
-**⚡ ETL Mejorado:**
-- Categorización automática de vendedores (Top/Medio/Bajo/SinVentas)
-- Script de reproceso con manejo de errores y transacciones
-- Consolidación de variables y eliminación de comandos GO
-- Validación integral con scripts específicos
-
-**📊 Análisis Avanzado:**
-- Gráficos temporales por categoría de vendedores
-- Paleta de colores consistente (Splatoon theme)
-- Manejo de warnings deprecados en Pandas
-- Análisis estadístico con percentiles y distribuciones
-
-### 📋 Documentación Actualizada:
-- Guías específicas para cada componente
-- Checklist de validación completo
-- Troubleshooting para problemas comunes
-- Log detallado de cambios implementados
-
----
-
-## 📚 Tecnologías
-
-- **Motor:** SQL Server 2016+ (compatible con Azure SQL, SQL Server 2019/2022)
-- **Lenguaje:** Transact-SQL (T-SQL)
-- **Análisis:** Python 3.8+ (Pandas, Matplotlib, Seaborn, Scipy)
-- **Herramientas:** SSMS, Azure Data Studio, VS Code, Jupyter
-
----
-
-## 🎓 Conceptos Académicos
-
-Este proyecto demuestra:
-
-- **Modelado dimensional** (Kimball) con esquema estrella
-- **Slowly Changing Dimensions** (Tipo 1 y 2) con versionado histórico
-- **ETL** (Extract, Transform, Load) inicial e incremental
-- **Data Quality** (validaciones, integridad referencial, tests)
-- **Window Functions** (RANK, ROW_NUMBER, LAG, SUM OVER, PERCENTILE_CONT)
-- **Análisis multidimensional** (OLAP) con drill-down temporal
-- **Business Intelligence** (KPIs, categorización automática, dashboards)
-- **Multi-currency support** con tipos de cambio históricos
-- **Cross-platform validation** (SQL Server ↔ Python/Pandas)
-
----
-
-## 👨‍💻 Autor
-
-**Proyecto:** Data Warehouse de Ventas de Celulares  
-**Autor:** Ramiro Ottone Villar  
-**Fecha:** Noviembre 2025  
-**Versión:** 2.1 - Segunda Entrega  
-**Propósito:** Proyecto académico de Modelado de Minería de Datos  
-**Estado:** ✅ Funcional con soporte multi-moneda y validación completa
-
----
-
-## 📝 Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
-
-**Uso académico y educativo libre.**
-
-=======
-# retail-sales-data-warehouse-sql
-Data Warehouse project for retail sales analytics. Includes dimensional modeling (star schema), SQL DDL/DML scripts, ETL pipeline in Python, and Jupyter notebooks for EDA and KPI reporting.
->>>>>>> ab794cfb45f4ececdd5ebff5c6728fe24f4352f0
+**Author:** Ramiro Ottone Villar  
+**Portfolio Project:** Canadian Tech Market  
+**Version:** 2.1  
+**Status:** Production-ready with multi-currency support and full validation
